@@ -2,11 +2,13 @@ package ec.com.imusic.entity;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 
 @Data
 public class Client {
 
-    private String id;
+    private String id = UUID.randomUUID().toString().substring(0, 10);
     private String name;
     private String surname;
 
