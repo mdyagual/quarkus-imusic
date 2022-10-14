@@ -12,13 +12,13 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ClientResource {
-
+    
     @Inject
     ClientRepository cs;
 
     @GET
     public Response getAll(){
-        return Response.ok(cs.listAll()).build();
+        return Response.ok(cs.list()).build();
     }
 
     @GET
@@ -35,9 +35,8 @@ public class ClientResource {
     }
 
     @PUT
-    @Path("/{idClient}")
-    public Response updateClient(@PathParam("idClient") String idClient, Client c){
-        cs.update(idClient, c);
+    public Response updateClient(Client c){
+        cs.update(c);
         return Response.ok().build();
     }
 
@@ -47,5 +46,12 @@ public class ClientResource {
         cs.delete(idClient);
         return Response.ok().build();
     }
+
+    /*@DELETE
+    @Path("/all")
+    public Response deleteAll(){
+        cs.deleteAll();
+        return Response.ok().build();
+    }*/
 
 }

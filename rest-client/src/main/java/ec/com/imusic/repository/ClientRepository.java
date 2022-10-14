@@ -6,59 +6,55 @@ import com.mongodb.client.model.Filters;
 import ec.com.imusic.entity.Client;
 import org.bson.Document;
 
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 
 @ApplicationScoped
 public class ClientRepository {
     @Inject
     MongoClient mc;
-    private final MongoCollection<Document> collection = mc.getDatabase("imusic").getCollection("Client");
+
+    //MongoClient data = MongoClients.create("mongodb+srv://mdyagual:mdyagual@clusterferreteria.aum6z.mongodb.net/?retryWrites=true&w=majority");
+    //private final MongoCollection<Document> collection = getCollection();
 
     @Transactional
-    public ArrayList<Client> listAll(){
-       var clients = new ArrayList<Client>();
-       collection.find().into(new ArrayList<>()).forEach(document -> {
-           Client c = makeClient(document);
-           clients.add(c);
-       });
-       return clients;
-
-    }
-
-    @Transactional
-    public void add(Client c){
-        var newClient = new Document()
-                .append("id",c.getId())
-                .append("name",c.getName())
-                .append("surname",c.getSurname())
-                .append("mail",c.getMail())
-                .append("age",c.getAge())
-                .append("gender",c.getGender());
-
-        collection.insertOne(newClient);
+    public ArrayList<Client> list(){
+       return getCollection().find().into(new ArrayList<>()).stream().map(this::makeClient).collect(Collectors.toCollection(ArrayList::new));
 
     }
 
     @Transactional
     public Client get(String idClient){
-        var document = Optional.ofNullable(collection.find(Filters.eq("id", idClient)).first());
-        return document.map(this::makeClient).orElse(new Client());
+        return makeClient(Objects.requireNonNull(getCollection().find(Filters.eq("id", idClient)).first()));
 
     }
 
+
     @Transactional
-    public void update(String idClient, Client c){
-        collection.updateOne(makeDocument(get(idClient)),makeDocument(c));
+    public void add(Client c){
+        getCollection().insertOne(makeDocument(c));
+    }
+
+    @Transactional
+    public void update(Client c){
+        getCollection().updateOne(Filters.eq("id", c.getId()),new Document("$set",makeDocument(c)));
     }
 
     @Transactional
     public void delete(String idClient){
-        collection.deleteOne(makeDocument(get(idClient)));
+        getCollection().deleteOne(Filters.eq("id", idClient));
     }
+
+    /*@Transactional
+    public void deleteAll(){
+        getCollection().deleteMany(Filters.empty());
+    }*/
 
     private Client makeClient(Document d){
         Client c = new Client();
@@ -68,20 +64,24 @@ public class ClientRepository {
         c.setMail(d.getString("mail"));
         c.setAge(d.getInteger("age"));
         c.setGender(d.getString("gender"));
+        c.setSubscriptionActivate(d.getBoolean("subscriptionActivate"));
 
         return c;
     }
-
-    private Document makeDocument(Client c){
-        return new Document().append("id",c.getId())
-                .append("name",c.getName())
-                .append("surname",c.getSurname())
-                .append("mail",c.getMail())
-                .append("age",c.getAge())
-                .append("gender",c.getGender());
+    private Document makeDocument(Client c) {
+        Document document = new Document();
+        document.append("id", c.getId())
+                .append("name", c.getName())
+                .append("surname", c.getSurname())
+                .append("mail", c.getMail())
+                .append("age", c.getAge())
+                .append("gender", c.getGender())
+                .append("subscriptionActivate",c.getSubscriptionActivate());
+        return document;
     }
 
-
-
+    private MongoCollection<Document> getCollection(){
+        return mc.getDatabase("imusic").getCollection("client");
+    }
 
 }
