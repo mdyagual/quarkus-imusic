@@ -3,9 +3,10 @@ package ec.com.imusic.repository;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import ec.com.imusic.config.ClientMapper;
+import ec.com.imusic.dto.ClientDTO;
 import ec.com.imusic.entity.Client;
 import org.bson.Document;
-
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,30 +21,37 @@ public class ClientRepository {
     @Inject
     MongoClient mc;
 
+    @Inject
+    ClientMapper mapper;
+
+
     //MongoClient data = MongoClients.create("mongodb+srv://mdyagual:mdyagual@clusterferreteria.aum6z.mongodb.net/?retryWrites=true&w=majority");
     //private final MongoCollection<Document> collection = getCollection();
 
     @Transactional
-    public ArrayList<Client> list(){
-       return getCollection().find().into(new ArrayList<>()).stream().map(this::makeClient).collect(Collectors.toCollection(ArrayList::new));
+    public ArrayList<ClientDTO> list(){
+       return getCollection().find().into(new ArrayList<>()).stream()
+               .map(this::makeClient)
+               .map(client -> this.mapper.toDto(client))
+               .collect(Collectors.toCollection(ArrayList::new));
 
     }
 
     @Transactional
-    public Client get(String idClient){
-        return makeClient(Objects.requireNonNull(getCollection().find(Filters.eq("id", idClient)).first()));
+    public ClientDTO get(String idClient){
+        return this.mapper.toDto(makeClient(Objects.requireNonNull(getCollection().find(Filters.eq("id", idClient)).first())));
 
     }
 
 
     @Transactional
-    public void add(Client c){
-        getCollection().insertOne(makeDocument(c));
+    public void add(ClientDTO c){
+        getCollection().insertOne(makeDocument(this.mapper.toClient(c)));
     }
 
     @Transactional
-    public void update(Client c){
-        getCollection().updateOne(Filters.eq("id", c.getId()),new Document("$set",makeDocument(c)));
+    public void update(ClientDTO c){
+        getCollection().updateOne(Filters.eq("id", c.getId()),new Document("$set",makeDocument(this.mapper.toClient(c))));
     }
 
     @Transactional

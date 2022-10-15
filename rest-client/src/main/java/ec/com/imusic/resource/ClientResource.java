@@ -1,6 +1,6 @@
 package ec.com.imusic.resource;
 
-import ec.com.imusic.entity.Client;
+import ec.com.imusic.dto.ClientDTO;
 import ec.com.imusic.repository.ClientRepository;
 
 import javax.inject.Inject;
@@ -28,14 +28,14 @@ public class ClientResource {
     }
 
     @POST
-    public Response save(Client c){
+    public Response save(ClientDTO c){
         cs.add(c);
-        return Response.ok().build();
+        return Response.status(201).build();
 
     }
 
     @PUT
-    public Response updateClient(Client c){
+    public Response updateClient(ClientDTO c){
         cs.update(c);
         return Response.ok().build();
     }
